@@ -32,8 +32,9 @@ int main(int argc, char *argv[])
 {
 	int file_from;
 	int file_to;
-	int r, w;
+	int r = 0, w = 0;
 	char *buffer[1024];
+	int count = 0;
 
 	if (argc != 3)
 	{
@@ -53,6 +54,11 @@ int main(int argc, char *argv[])
 			exit(98);
 		}
 		w = write(file_to, buffer, r);
+		while (w < r)
+		{
+			count = write(file_to, buffer + w, r - w);
+			w += count;
+		}
 		if (w == -1 || file_to == -1)
 		{
 			dprintf(STDERR_FILENO, "Error: Can't write to %s\n", argv[2]);

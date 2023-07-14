@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 void close_file(int fd);
+void error_file(int nwr, char *str);
 
 /**
  * close_file - close file descriptors
@@ -20,6 +21,20 @@ void close_file(int fd)
 	}
 
 }
+/**
+ * error_file - to check if file can be opened
+ * @w: to the file to write bytes
+ * @str: pointer to string
+ */
+void error_file(int w, char *str)
+{
+	if (w == -1)
+	{
+		dprintf(STDERR_FILENO, "Error: Can't write to %s\n", str);
+		exit(99);
+	}
+}
+
 
 /**
  * main - entry point
@@ -34,7 +49,6 @@ int main(int argc, char *argv[])
 	int file_to;
 	int r = 0, w = 0;
 	char *buffer[1024];
-	int count = 0;
 
 	if (argc != 3)
 	{
@@ -42,27 +56,25 @@ int main(int argc, char *argv[])
 		exit(97);
 	}
 	file_from = open(argv[1], O_RDONLY);
-	file_to = open(argv[2], O_WRONLY | O_CREAT | O_TRUNC | O_APPEND, 0664);
+	file_to = open(argv[2], O_WRONLY | O_CREAT | O_EXCL, 0664);
+	if (file_to == -1)
+		file_to = open(argv[2], O_WRONLY | O_TRUNC);
 
-	r = 1024;
-	while (r == 1024)
+	r = read(file_from, buffer, 1024);
+	while (r != 0)
 	{
-		r = read(file_from, buffer, 1024);
 		if (r == -1 || file_from == -1)
 		{
 			dprintf(STDERR_FILENO, "Error: Can't read from file %s\n", argv[1]);
 			exit(98);
 		}
 		w = write(file_to, buffer, r);
+		error_file(w, argv[2]);
 		while (w < r)
 		{
-			count = write(file_to, buffer + w, r - w);
-			w += count;
-		}
-		if (w == -1 || file_to == -1)
-		{
-			dprintf(STDERR_FILENO, "Error: Can't write to %s\n", argv[2]);
-			exit(99);
+			w = write(file_to, buffer + w, r - w);
+			error_file(w, argv[2]);
+
 		}
 	}
 

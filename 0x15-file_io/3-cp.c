@@ -76,6 +76,7 @@ int main(int argc, char *argv[])
 			error_file(w, argv[2]);
 
 		}
+		r = read(file_from, buffer, 1024);
 	}
 
 	close(file_from);
